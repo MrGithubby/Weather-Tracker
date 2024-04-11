@@ -68,7 +68,7 @@ const displayFiveDayForecast = (forecastData) => {
         const leftHeader = document.createElement('h3');
         leftHeader.classList.add('fw-bold');
         const forecastElement = document.createElement('div');
-        forecastElement.classList.add('forecast-item', 'card-body', 'p-3' );
+        forecastElement.classList.add('forecast-item', 'card-body', 'p-3','bg-secondary' ,'text-white');
         const dateElement = document.createElement('h5');
         dateElement.textContent = forecast.dt_txt.split(" ")[0];
         const weatherIcon = document.createElement('i');
@@ -81,7 +81,6 @@ const displayFiveDayForecast = (forecastData) => {
         windElement.textContent = `Wind: ${forecast.wind.speed} M/S`;
 
         leftContainer.appendChild(leftIcon);
-        leftContainer.appendChild(leftHeader);
         forecastElement.appendChild(dateElement);
         forecastElement.appendChild(weatherIcon);
         forecastElement.appendChild(temperatureElement);
@@ -94,8 +93,28 @@ const displayFiveDayForecast = (forecastData) => {
 
 // Function to get weather details for a city
 const getWeatherDetails = (cityName) => {
-    const WEATHER_API_URL = `https://api.openweathermap.org/data/2.5/weather?q=${cityName}&appid=${API_KEY}`;
+    // Fetch coordinates for the given city
+    fetch(`https://api.openweathermap.org/geo/1.0/direct?q=${cityName}&limit=1&appid=${API_KEY}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.length > 0) {
+                const { lat, lon } = data[0];
+                // Call the function to fetch weather details using the obtained coordinates
+                fetchWeatherData(cityName, lat, lon);
+            } else {
+                console.error("No coordinates found for the city:", cityName);
+            }
+        })
+        .catch(error => {
+            console.error("Error fetching coordinates:", error);
+        });
+};
 
+const fetchWeatherData = (cityName, lat, lon) => {
+    // Weather API URL with latitude and longitude
+    const WEATHER_API_URL = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}`;
+    
+    // Fetch current weather data
     fetch(WEATHER_API_URL)
         .then(response => response.json())
         .then(data => {
@@ -106,7 +125,10 @@ const getWeatherDetails = (cityName) => {
             console.error("Error fetching current weather:", error);
         });
 
-    const FORECAST_API_URL = `https://api.openweathermap.org/data/2.5/forecast?q=${cityName}&appid=${API_KEY}`;
+    // Forecast API URL with latitude and longitude
+    const FORECAST_API_URL = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}`;
+    
+    // Fetch 5-day forecast data
     fetch(FORECAST_API_URL)
         .then(response => response.json())
         .then(data => {
